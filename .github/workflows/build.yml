@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,7 +37,7 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           python3 - <<'EOF'
-          import struct, zlib, base64
+          import struct, zlib
 
           def create_png(size, r, g, b):
               def chunk(name, data):
@@ -65,6 +68,11 @@ jobs:
           print("Icons generated successfully")
           EOF
 
+      - name: Enable AndroidX
+        run: |
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          echo "android.enableJetifier=true" >> android/gradle.properties
+
       - name: Get Flutter dependencies
         run: flutter pub get
 
@@ -76,4 +84,4 @@ jobs:
         with:
           name: VoiceStudioPro-release
           path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 30
+          retention-days: 5
