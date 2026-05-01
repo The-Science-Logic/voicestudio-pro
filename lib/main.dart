@@ -20,7 +20,8 @@ void main() async {
         Provider<StorageService>.value(value: storageService),
         ChangeNotifierProxyProvider<StorageService, QueueProvider>(
           create: (ctx) => QueueProvider(storageService),
-          update: (ctx, storage, prev) => prev ?? QueueProvider(storage),
+          update: (ctx, storage, prev) =>
+              prev ?? QueueProvider(storage),
         ),
       ],
       child: const VoiceStudioApp(),
@@ -57,15 +58,18 @@ class VoiceStudioApp extends StatelessWidget {
           fillColor: const Color(0xFF1A1F3A),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF444444)),
+            borderSide:
+                const BorderSide(color: Color(0xFF444444)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide:
-                const BorderSide(color: Color(0xFF00D9FF), width: 2),
+            borderSide: const BorderSide(
+                color: Color(0xFF00D9FF), width: 2),
           ),
-          labelStyle: const TextStyle(color: Color(0xFFE0E0E0)),
-          hintStyle: const TextStyle(color: Color(0xFF888888)),
+          labelStyle:
+              const TextStyle(color: Color(0xFFE0E0E0)),
+          hintStyle:
+              const TextStyle(color: Color(0xFF888888)),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -75,7 +79,7 @@ class VoiceStudioApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8)),
           ),
         ),
-        tabBarTheme: const TabBarThemeData(
+        tabBarTheme: const TabBarTheme(
           labelColor: Color(0xFF00D9FF),
           unselectedLabelColor: Color(0xFF888888),
           indicatorColor: Color(0xFF00D9FF),
@@ -118,15 +122,22 @@ class _HomeScreenState extends State<HomeScreen>
         title: const Text(
           'VoiceStudio Pro',
           style: TextStyle(
-              color: Color(0xFF00D9FF), fontWeight: FontWeight.bold),
+              color: Color(0xFF00D9FF),
+              fontWeight: FontWeight.bold),
         ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.mic), text: 'Studio'),
-            Tab(icon: Icon(Icons.queue_music), text: 'Queue'),
-            Tab(icon: Icon(Icons.library_music), text: 'Library'),
-            Tab(icon: Icon(Icons.settings), text: 'Settings'),
+            Tab(
+                icon: Icon(Icons.queue_music),
+                text: 'Queue'),
+            Tab(
+                icon: Icon(Icons.library_music),
+                text: 'Library'),
+            Tab(
+                icon: Icon(Icons.settings),
+                text: 'Settings'),
           ],
         ),
       ),
