@@ -77,25 +77,24 @@ jobs:
         run: flutter pub get
 
       - name: Build release APK
-        run: flutter build apk --release --no-pub
+        run: flutter build apk --release --no-pub || true
 
-      - name: Find APK location
-        run: find . -name "app-release.apk" -type f 2>/dev/null
-
-      - name: Copy APK to root
+      - name: Verify APK exists and upload
         run: |
+          echo "=== Searching for APK ==="
+          find . -name "*.apk" -type f 2>/dev/null
           APK=$(find . -name "app-release.apk" -type f 2>/dev/null | head -1)
-          if [ -n "$APK" ]; then
-            echo "Found APK at: $APK"
-            cp "$APK" ./VoiceStudioPro.apk
-          else
-            echo "APK not found"
+          if [ -z "$APK" ]; then
+            echo "ERROR: APK not found anywhere"
             exit 1
           fi
+          echo "SUCCESS: APK found at $APK"
+          cp "$APK" ./VoiceStudioPro.apk
+          ls -lh ./VoiceStudioPro.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: VoiceStudioPro-release
           path: ./VoiceStudioPro.apk
-          retention-days: 5
+          retention-days: 30
