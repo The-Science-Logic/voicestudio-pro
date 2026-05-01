@@ -76,21 +76,32 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
-      - name: Build release APK via Gradle directly
+      - name: Generate gradlew
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
-        env:
-          FLUTTER_ROOT: ${{ env.FLUTTER_ROOT }}
+          gradle wrapper --gradle-version=8.3
+          chmod +x gradlew
 
-      - name: Locate APK
+      - name: Build APK via gradlew
         run: |
-          find . -name "*.apk" -type f
-          echo "APK search complete"
+          cd android
+          ./gradlew assembleRelease --no-daemon -Pflutter.sdk=$FLUTTER_ROOT
+
+      - name: Find and display APK path
+        run: find . -name "app-release.apk" -type f 2>/dev/null
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: VoiceStudioPro-release
           path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload APK alternate path
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoiceStudioPro-release-alt
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: warn
           retention-days: 5
