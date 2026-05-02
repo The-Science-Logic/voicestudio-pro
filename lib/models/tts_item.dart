@@ -6,6 +6,7 @@ class TtsItem {
   final String voice;
   final String format;
   final List<String> tags;
+  final String saveName;
   TtsStatus status;
   String? filePath;
   String? errorMessage;
@@ -18,6 +19,7 @@ class TtsItem {
     required this.voice,
     required this.format,
     required this.tags,
+    this.saveName = '',
     this.status = TtsStatus.pending,
     this.filePath,
     this.errorMessage,
@@ -31,6 +33,7 @@ class TtsItem {
         'voice': voice,
         'format': format,
         'tags': tags,
+        'saveName': saveName,
         'status': status.name,
         'filePath': filePath,
         'errorMessage': errorMessage,
@@ -44,6 +47,7 @@ class TtsItem {
         voice: j['voice'] as String,
         format: j['format'] as String,
         tags: List<String>.from(j['tags'] as List),
+        saveName: (j['saveName'] as String?) ?? '',
         status: TtsStatus.values.firstWhere(
           (e) => e.name == j['status'],
           orElse: () => TtsStatus.pending,
