@@ -1,6 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Internet for Gemini API -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Audio playback -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!-- External storage for permanent files -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"/>
 
     <application
         android:label="VoiceStudio Pro"
