@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -29,8 +30,30 @@ class QueueProvider extends ChangeNotifier {
   int get dailyLimitEstimate => _dailyLimitEstimate;
 
   QueueProvider(this._storage) {
+    _initPlayer();
+  }
+
+  void _initPlayer() {
+    // Set audio context for Android playback compatibility
+    _player.setAudioContext(
+      AudioContext(
+        android: AudioContextAndroid(
+          audioFocus: AndroidAudioFocus.gain,
+          usageType: AndroidUsageType.media,
+          contentType: AndroidContentType.music,
+          audioMode: AndroidAudioMode.normal,
+          stayAwake: false,
+        ),
+      ),
+    );
     _player.onPlayerComplete.listen((_) {
       _processNext();
+    });
+    _player.onPlayerStateChanged.listen((state) {
+      if (state == PlayerState.stopped ||
+          state == PlayerState.completed) {
+        _processNext();
+      }
     });
   }
 
@@ -105,12 +128,16 @@ class QueueProvider extends ChangeNotifier {
     if (result.audioBytes != null) {
       _dailyCallCount++;
       final path = await _storage.saveAudioTemp(
-          result.audioBytes!, item.id, item.format);
+        result.audioBytes!,
+        item.id,
+        item.format,
+        item.saveName,
+      );
       item.filePath = path;
       item.status = TtsStatus.completed;
       _statusMessage = 'Completed. Playing audio…';
       notifyListeners();
-      await _player.play(DeviceFileSource(path));
+      await _playAudio(path);
     } else if (result.rateLimited) {
       item.status = TtsStatus.rateLimited;
       item.retryCount++;
@@ -132,6 +159,26 @@ class QueueProvider extends ChangeNotifier {
       item.errorMessage = result.error;
       _statusMessage = 'Error: ${result.error}';
       notifyListeners();
+      await Future.delayed(const Duration(seconds: 1));
+      _processNext();
+    }
+  }
+
+  Future<void> _playAudio(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        _statusMessage = 'Audio file not found: $filePath';
+        notifyListeners();
+        return;
+      }
+      await _player.stop();
+      await _player.setVolume(1.0);
+      await _player.play(DeviceFileSource(filePath));
+    } catch (e) {
+      _statusMessage = 'Playback error: $e';
+      notifyListeners();
+      // Still process next even if playback fails
       await Future.delayed(const Duration(seconds: 1));
       _processNext();
     }
