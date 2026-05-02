@@ -8,13 +8,15 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<DashboardScreen> createState() =>
+      _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final _textController = TextEditingController();
   final _sceneController = TextEditingController();
   final _contextController = TextEditingController();
+  final _saveNameController = TextEditingController();
   bool _showHistory = false;
   List<String> _history = [];
 
@@ -32,6 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _textController.dispose();
     _sceneController.dispose();
     _contextController.dispose();
+    _saveNameController.dispose();
     super.dispose();
   }
 
@@ -54,16 +57,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
     final storage = context.read<StorageService>();
+    final saveName = _saveNameController.text.trim();
     final item = TtsItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       text: text,
       voice: storage.getVoice(),
       format: storage.getFormat(),
       tags: storage.getTags(),
+      saveName: saveName,
     );
     context.read<QueueProvider>().addItem(item);
     storage.addHistory(text);
     _textController.clear();
+    _saveNameController.clear();
     _refreshHistory();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -98,6 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Status bar
           if (queue.statusMessage != null)
             Container(
               width: double.infinity,
@@ -106,8 +113,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF1A1F3A),
                 borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: const Color(0xFF00D9FF)),
+                border: Border.all(
+                    color: const Color(0xFF00D9FF)),
               ),
               child: Row(
                 children: [
@@ -127,7 +134,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: Text(
                       queue.isPaused &&
-                              queue.rateLimitRetrySeconds > 0
+                              queue.rateLimitRetrySeconds >
+                                  0
                           ? '${queue.statusMessage} (${queue.rateLimitRetrySeconds}s)'
                           : queue.statusMessage!,
                       style: const TextStyle(
@@ -139,14 +147,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
+          // API usage + queue controls
           Container(
             padding: const EdgeInsets.symmetric(
                 horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: const Color(0xFF1A1F3A),
               borderRadius: BorderRadius.circular(8),
-              border:
-                  Border.all(color: const Color(0xFF444444)),
+              border: Border.all(
+                  color: const Color(0xFF444444)),
             ),
             child: Row(
               mainAxisAlignment:
@@ -172,7 +181,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 queue.isPaused
                     ? ElevatedButton.icon(
                         onPressed: queue.resumeQueue,
-                        icon: const Icon(Icons.play_arrow,
+                        icon: const Icon(
+                            Icons.play_arrow,
                             size: 16),
                         label: const Text('Resume'),
                         style: ElevatedButton.styleFrom(
@@ -183,15 +193,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 6),
-                          textStyle:
-                              const TextStyle(fontSize: 12),
+                          textStyle: const TextStyle(
+                              fontSize: 12),
                         ),
                       )
                     : ElevatedButton.icon(
                         onPressed: queue.pauseQueue,
                         icon: const Icon(Icons.pause,
                             size: 16),
-                        label: const Text('Pause Queue'),
+                        label:
+                            const Text('Pause Queue'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
                               const Color(0xFFF44336),
@@ -200,8 +211,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 6),
-                          textStyle:
-                              const TextStyle(fontSize: 12),
+                          textStyle: const TextStyle(
+                              fontSize: 12),
                         ),
                       ),
               ],
@@ -209,13 +220,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Scene direction
           _sectionLabel('Scene Direction'),
           TextField(
             controller: _sceneController,
             maxLines: 3,
             maxLength: 300,
-            style:
-                const TextStyle(color: Color(0xFFE0E0E0)),
+            style: const TextStyle(
+                color: Color(0xFFE0E0E0)),
             decoration: const InputDecoration(
               hintText: 'Describe the scene direction…',
               counterStyle:
@@ -224,13 +236,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 10),
 
+          // Sample context
           _sectionLabel('Sample Context'),
           TextField(
             controller: _contextController,
             maxLines: 6,
             maxLength: 600,
-            style:
-                const TextStyle(color: Color(0xFFE0E0E0)),
+            style: const TextStyle(
+                color: Color(0xFFE0E0E0)),
             decoration: const InputDecoration(
               hintText: 'Paste sample context here…',
               counterStyle:
@@ -248,22 +261,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Text to synthesize — 1500 chars
           _sectionLabel('Text to Synthesize'),
           TextField(
             controller: _textController,
-            maxLines: 4,
-            maxLength: 1000,
-            style:
-                const TextStyle(color: Color(0xFFE0E0E0)),
+            maxLines: 8,
+            maxLength: 1500,
+            style: const TextStyle(
+                color: Color(0xFFE0E0E0)),
             decoration: const InputDecoration(
               hintText:
-                  'Enter text to convert to speech…',
+                  'Enter text to convert to speech… (up to 1500 characters / ~250 words)',
               counterStyle:
                   TextStyle(color: Color(0xFF888888)),
             ),
           ),
           const SizedBox(height: 10),
 
+          // Save name field
+          _sectionLabel('Save Name (optional)'),
+          TextField(
+            controller: _saveNameController,
+            maxLines: 1,
+            maxLength: 50,
+            style: const TextStyle(
+                color: Color(0xFFE0E0E0)),
+            decoration: const InputDecoration(
+              hintText:
+                  'e.g. intro_scene — used as audio filename',
+              counterStyle:
+                  TextStyle(color: Color(0xFF888888)),
+              prefixIcon: Icon(Icons.drive_file_rename_outline,
+                  color: Color(0xFF888888), size: 18),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Action buttons
           Row(
             children: [
               Expanded(
@@ -285,8 +319,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: const Color(0xFF00D9FF),
                 ),
                 label: const Text('History',
-                    style:
-                        TextStyle(color: Color(0xFF00D9FF))),
+                    style: TextStyle(
+                        color: Color(0xFF00D9FF))),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(
                       color: Color(0xFF00D9FF)),
@@ -295,6 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
 
+          // History panel
           if (_showHistory) ...[
             const SizedBox(height: 16),
             Row(
@@ -348,8 +383,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1F3A),
           borderRadius: BorderRadius.circular(6),
-          border:
-              Border.all(color: const Color(0xFF444444)),
+          border: Border.all(
+              color: const Color(0xFF444444)),
         ),
         child: Row(
           children: [
