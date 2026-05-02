@@ -19,6 +19,8 @@ class StorageService {
 
   StorageService(this._prefs);
 
+  // ── API Keys ──────────────────────────────────────────────────────────────
+
   List<String> getApiKeys() {
     final raw = _prefs.getString(_keyApiKeys);
     if (raw == null) return [];
@@ -44,6 +46,8 @@ class StorageService {
     return key.isEmpty ? null : key;
   }
 
+  // ── Scene / Context ───────────────────────────────────────────────────────
+
   String getSceneDirection() =>
       _prefs.getString(_keySceneDirection) ?? '';
 
@@ -55,6 +59,8 @@ class StorageService {
 
   Future<void> saveSampleContext(String val) async =>
       _prefs.setString(_keySampleContext, val);
+
+  // ── Voice / Format / Tags ─────────────────────────────────────────────────
 
   String getVoice() => _prefs.getString(_keyVoice) ?? 'Puck';
 
@@ -76,6 +82,8 @@ class StorageService {
   Future<void> saveTags(List<String> tags) async =>
       _prefs.setString(_keyTags, jsonEncode(tags));
 
+  // ── History ───────────────────────────────────────────────────────────────
+
   List<String> getHistory() {
     final raw = _prefs.getString(_keyHistory);
     if (raw == null) return [];
@@ -92,6 +100,8 @@ class StorageService {
   Future<void> clearHistory() async =>
       _prefs.remove(_keyHistory);
 
+  // ── File Storage ──────────────────────────────────────────────────────────
+
   Future<Directory> _getDocsDir() async =>
       getApplicationDocumentsDirectory();
 
@@ -102,17 +112,40 @@ class StorageService {
     return dir;
   }
 
+  // Permanent files saved to Music/VoiceStudioPro — visible in File Manager
   Future<Directory> _getPermanentAudioDir() async {
-    final base = await _getDocsDir();
-    final dir = Directory('${base.path}/audio_permanent');
+    Directory? base;
+    try {
+      final dirs = await getExternalStorageDirectories(
+          type: StorageDirectory.music);
+      if (dirs != null && dirs.isNotEmpty) {
+        base = dirs.first;
+      }
+    } catch (_) {}
+    base ??= await _getDocsDir();
+    final dir = Directory('${base.path}/VoiceStudioPro');
     if (!await dir.exists()) await dir.create(recursive: true);
     return dir;
   }
 
+  // Sanitize filename — remove characters not allowed in Android filenames
+  String _sanitizeFileName(String name) {
+    if (name.trim().isEmpty) return '';
+    return name
+        .trim()
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .toLowerCase();
+  }
+
   Future<String> saveAudioTemp(
-      Uint8List bytes, String id, String format) async {
+      Uint8List bytes, String id, String format, String saveName) async {
     final dir = await _getTempAudioDir();
-    final file = File('${dir.path}/$id.$format');
+    final sanitized = _sanitizeFileName(saveName);
+    final fileName = sanitized.isNotEmpty
+        ? '${sanitized}_$id.$format'
+        : '$id.$format';
+    final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(bytes);
     return file.path;
   }
